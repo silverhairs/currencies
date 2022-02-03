@@ -12,62 +12,75 @@ const BASE_URL = 'https://www.alphavantage.co';
 /**
  * Class that handles the business logic of `Exchange` objects with the given list of currencies.
  */
-class ExchangeService {
-  constructor(private currencies: Currency[]) {}
+export class ExchangeService {
   /**
-   * A list of all the Exchange objects that can possibly exist with the given list of currencies.
+   * Get the exchange rate of the passed exchange
+   * @param exchange {Exchange} The exchange whose rate is being obtained.
+   * @returns {Promise<ExchangeRateRequest>} Returns a
    */
-  public get exchangeCombinations(): Exchange[] {
-    return this._generatePossibleExchanges();
-  }
+  async getExchangeRate(exchange: Exchange): Promise<Exchange> {
+    const savedExchange = localStorage.getItem('exchange');
+    let exchangeRequest: ExchangeRateRequest | undefined;
 
-  /**
-   * Generates an {Array<Exchange>} with all the possible echange objects from the given list of currencies.
-   * @returns {Array<Exchange>} Returns the generated array.
-   */
-  private _generatePossibleExchanges(): Exchange[] {
-    const results: Exchange[] = [];
-    for (let i = 0; i < this.currencies.length - 1; i++) {
-      for (let j = i + 1; j < this.currencies.length; j++) {
-        results.push({
-          baseCurrency: this.currencies[i],
-          targetCurrency: this.currencies[j],
-          rate: 1,
-        });
+    console.log(`From storage: ${savedExchange}`);
+    if (savedExchange !== null) {
+      exchangeRequest = getExchangeRequestFromJSON(savedExchange);
+      const isExpired =
+        new Date().getHours() -
+          Date.parse(exchangeRequest.requestTime.toDateString()) >
+        0;
+
+      if (isExpired) {
+        console.log('expired');
+
+        exchangeRequest = await this.fetchExchangeRate(exchange);
+        this.cacheExchange(exchangeRequest);
       }
+    } else {
+      console.log('making request');
+
+      exchangeRequest = await this.fetchExchangeRate(exchange);
+      this.cacheExchange(exchangeRequest);
     }
-    return results;
+
+    return exchangeRequest;
   }
 
-  /**
-   * Fetches the rates of all the exchanges possible in the given list of currencies.
-   * @returns {Promise<Exchange[]>} Returns all the exchange rates.
-   */
-  async fetchAllExchanges(): Promise<Exchange[]> {
-    return await new Promise((resolve) => {
-      debounce(() => resolve(this._fetchAllExchanges()), 120_000);
-    });
-  }
-
-  private async _fetchAllExchanges(): Promise<Exchange[]> {
-    const exchanges = this._generatePossibleExchanges();
-    return await Promise.all(exchanges.map(this.fetchExchangeRate));
-  }
-  /**
-   * Fetches the rate of a given exchange from the API.
-   * @param exchange {Exchange} the exchange whose rate is being fetched.
-   * @returns {Promise<Exchange>} Returns the passed exchange with un updated rate.
-   */
-  async fetchExchangeRate(exchange: Exchange): Promise<Exchange> {
-    const response = await fetch(
-      `${BASE_URL}/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${exchange.baseCurrency.value}&to_currency=${exchange.targetCurrency.value}&apikey=${API_KEY}`
+  private async fetchExchangeRate(
+    exchange: Exchange
+  ): Promise<ExchangeRateRequest> {
+    const raw = await fetch(
+      `${BASE_URL}//query?function=CURRENCY_EXCHANGE_RATE&from_currency=${exchange.baseCurrency.value}&to_currency=${exchange.targetCurrency.value}&apikey=${API_KEY}`
     );
-    const data = await response.json();
+    const data = await raw.json();
     return {
-      ...exchange,
+      baseCurrency: exchange.baseCurrency,
+      targetCurrency: exchange.targetCurrency,
       rate: data['Realtime Currency Exchange Rate']['5. Exchange Rate'],
+      requestTime: new Date(),
     };
+  }
+
+  private cacheExchange(exchangeRequest: ExchangeRateRequest): void {
+    localStorage.setItem('exchange', JSON.stringify(exchangeRequest));
   }
 }
 
-export { ExchangeService };
+/**
+ * A model for the exchange rate.
+ */
+export interface ExchangeRateRequest extends Exchange {
+  requestTime: Date;
+}
+/**
+ * Parses a JSON string into a new ExchangeRateRequest object.
+ * @param raw {string} The ExchangeRateRequest in a json string.
+ * @returns {ExchangeRateRequest} Returns the deserialized ExchangeRateRequest.
+ */
+const getExchangeRequestFromJSON = (raw: string): ExchangeRateRequest => {
+  const data = JSON.parse(raw);
+  return {
+    ...data,
+    requestTime: new Date(data.requestTime),
+  };
+};

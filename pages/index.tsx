@@ -17,11 +17,8 @@ const currencies: Currency[] = [
  * @returns {JSX.Element} Returns the home page.
  */
 export default function Home(): JSX.Element {
-  const exchangeService = new ExchangeService(currencies);
+  const service = new ExchangeService();
 
-  const [availableExchanges, setAvalaibleExchanges] = useState<Exchange[]>(
-    exchangeService.exchangeCombinations
-  );
   const [amount, setAmount] = useState<number>(0);
   const [exchange, setExchange] = useState<Exchange>({
     baseCurrency: currencies[0],
@@ -38,24 +35,14 @@ export default function Home(): JSX.Element {
   };
 
   const exchangeRateHandler = async () => {
-    const newExchange =
-      availableExchanges.filter(
-        (e) =>
-          e.baseCurrency === exchange.baseCurrency &&
-          e.targetCurrency === exchange.targetCurrency
-      )[0] ?? exchange;
-
-    setExchange({ ...exchange, rate: newExchange.rate });
+    const newExchange = await service.getExchangeRate(exchange);
+    if (newExchange !== undefined) {
+      setExchange({ ...exchange, rate: newExchange.rate });
+    }
   };
 
   useEffect(() => {
-    exchangeService
-      .fetchAllExchanges()
-      .then(setAvalaibleExchanges)
-      .then((_) => {
-        exchangeRateHandler();
-        availableExchanges.forEach(console.log);
-      });
+    exchangeRateHandler();
   }, [exchange.baseCurrency, exchange.targetCurrency]);
 
   return (
@@ -80,3 +67,23 @@ export default function Home(): JSX.Element {
  * - Add Chart
  * - Fix bug while fetching the exchange rates.
  */
+
+/**
+ * API key from env variable.
+ */
+const API_KEY = process.env.API_KEY;
+/**
+ * URI Authority of the [Alphavantage](https://alphavantage.co) API.
+ */
+const BASE_URL = 'https://www.alphavantage.co';
+
+async function fetchExchangeRate(exchange: Exchange): Promise<Exchange> {
+  const response = await fetch(
+    `${BASE_URL}/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${exchange.baseCurrency.value}&to_currency=${exchange.targetCurrency.value}&apikey=${API_KEY}`
+  );
+  const data = await response.json();
+  return {
+    ...exchange,
+    rate: data['Realtime Currency Exchange Rate']['5. Exchange Rate'],
+  };
+}
