@@ -1,4 +1,5 @@
 import Select from 'react-select';
+import { Currency, Exchange } from 'services/exchange';
 
 /**
  * A callback type for the amount update handler.
@@ -23,23 +24,6 @@ interface ExchangeFormProps {
   onChangeBaseCurrency: CurrencyHandler;
   onChangeTargetCurrency: CurrencyHandler;
   chartHandler?: ChartHandler;
-}
-/**
- * A model for a currency.
- */
-export interface Currency {
-  value: string;
-  label: string;
-  symbol: string;
-}
-
-/**
- * A model for an exchange. Holds the exchanges base currency, target currency and the exchange rate.
- */
-export interface Exchange {
-  baseCurrency: Currency;
-  targetCurrency: Currency;
-  rate: 1;
 }
 
 /**

@@ -1,13 +1,30 @@
-import { Currency, Exchange } from '@components/ExchangeForm';
-import { debounce } from 'lodash';
 /**
- * API key from env variable.
+ * [Alphavantage](https://alphavantage.co)'s API key.
  */
 const API_KEY = process.env.API_KEY;
-/**
- * URI Authority of the [Alphavantage](https://alphavantage.co) API.
- */
 const BASE_URL = 'https://www.alphavantage.co';
+
+interface ExchangeRateRequest extends Exchange {
+  requestTime: Date;
+}
+
+/**
+ * A model for a currency.
+ */
+export interface Currency {
+  value: string;
+  label: string;
+  symbol: string;
+}
+
+/**
+ * A model for an exchange. Holds the exchanges base currency, target currency and the exchange rate.
+ */
+export interface Exchange {
+  baseCurrency: Currency;
+  targetCurrency: Currency;
+  rate: 1;
+}
 
 /**
  * Class that handles the business logic of `Exchange` objects with the given list of currencies.
@@ -22,31 +39,23 @@ export class ExchangeService {
     const savedExchange = localStorage.getItem('exchange');
     let exchangeRequest: ExchangeRateRequest | undefined;
 
-    console.log(`From storage: ${savedExchange}`);
-    if (savedExchange !== null) {
-      exchangeRequest = getExchangeRequestFromJSON(savedExchange);
+    if (savedExchange === null) {
+      exchangeRequest = await this.fetchExchange(exchange);
+      this.cacheExchange(exchangeRequest);
+    } else {
+      exchangeRequest = this.getExchangeRequestFromJSON(savedExchange);
       const isExpired =
-        new Date().getHours() -
-          Date.parse(exchangeRequest.requestTime.toDateString()) >
-        0;
-
+        new Date().getHours() - exchangeRequest.requestTime.getHours() > 0;
       if (isExpired) {
-        console.log('expired');
-
-        exchangeRequest = await this.fetchExchangeRate(exchange);
+        exchangeRequest = await this.fetchExchange(exchange);
         this.cacheExchange(exchangeRequest);
       }
-    } else {
-      console.log('making request');
-
-      exchangeRequest = await this.fetchExchangeRate(exchange);
-      this.cacheExchange(exchangeRequest);
     }
 
     return exchangeRequest;
   }
 
-  private async fetchExchangeRate(
+  protected async fetchExchange(
     exchange: Exchange
   ): Promise<ExchangeRateRequest> {
     const raw = await fetch(
@@ -54,8 +63,7 @@ export class ExchangeService {
     );
     const data = await raw.json();
     return {
-      baseCurrency: exchange.baseCurrency,
-      targetCurrency: exchange.targetCurrency,
+      ...exchange,
       rate: data['Realtime Currency Exchange Rate']['5. Exchange Rate'],
       requestTime: new Date(),
     };
@@ -64,23 +72,12 @@ export class ExchangeService {
   private cacheExchange(exchangeRequest: ExchangeRateRequest): void {
     localStorage.setItem('exchange', JSON.stringify(exchangeRequest));
   }
-}
 
-/**
- * A model for the exchange rate.
- */
-export interface ExchangeRateRequest extends Exchange {
-  requestTime: Date;
-}
-/**
- * Parses a JSON string into a new ExchangeRateRequest object.
- * @param raw {string} The ExchangeRateRequest in a json string.
- * @returns {ExchangeRateRequest} Returns the deserialized ExchangeRateRequest.
- */
-const getExchangeRequestFromJSON = (raw: string): ExchangeRateRequest => {
-  const data = JSON.parse(raw);
-  return {
-    ...data,
-    requestTime: new Date(data.requestTime),
+  private getExchangeRequestFromJSON = (raw: string): ExchangeRateRequest => {
+    const data = JSON.parse(raw);
+    return {
+      ...data,
+      requestTime: new Date(data.requestTime),
+    };
   };
-};
+}

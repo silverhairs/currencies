@@ -1,11 +1,8 @@
 import { Layout } from '@components/Layout';
-import { Currency, Exchange, ExchangeForm } from '@components/ExchangeForm';
+import { ExchangeForm } from '@components/ExchangeForm';
 import { useEffect, useState } from 'react';
-import { ExchangeService } from 'services/exchange';
+import { ExchangeService, Currency, Exchange } from 'services/exchange';
 
-/**
- * All the available currencies.
- */
 const currencies: Currency[] = [
   { value: 'USD', label: 'USD', symbol: '$' },
   { value: 'GBP', label: 'GBP', symbol: '£' },
@@ -60,30 +57,4 @@ export default function Home(): JSX.Element {
       </div>
     </Layout>
   );
-}
-
-//TODO:
-/**
- * - Add Chart
- * - Fix bug while fetching the exchange rates.
- */
-
-/**
- * API key from env variable.
- */
-const API_KEY = process.env.API_KEY;
-/**
- * URI Authority of the [Alphavantage](https://alphavantage.co) API.
- */
-const BASE_URL = 'https://www.alphavantage.co';
-
-async function fetchExchangeRate(exchange: Exchange): Promise<Exchange> {
-  const response = await fetch(
-    `${BASE_URL}/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${exchange.baseCurrency.value}&to_currency=${exchange.targetCurrency.value}&apikey=${API_KEY}`
-  );
-  const data = await response.json();
-  return {
-    ...exchange,
-    rate: data['Realtime Currency Exchange Rate']['5. Exchange Rate'],
-  };
 }
