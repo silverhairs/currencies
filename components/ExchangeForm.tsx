@@ -9,6 +9,10 @@ type AmountHandler = (amount: number) => void;
  * A callback type for the currency update handler.
  */
 type CurrencyHandler = (currency: Currency) => void;
+/**
+ * A callback to handle the chart
+ */
+type ChartHandler = (exchange: Exchange) => void;
 
 interface ExchangeFormProps {
   exchange: Exchange;
@@ -18,6 +22,7 @@ interface ExchangeFormProps {
   onChangeAmount: AmountHandler;
   onChangeBaseCurrency: CurrencyHandler;
   onChangeTargetCurrency: CurrencyHandler;
+  chartHandler?: ChartHandler;
 }
 /**
  * A model for a currency.
@@ -96,9 +101,8 @@ export function ExchangeForm(props: ExchangeFormProps): JSX.Element {
         />
       </div>
       <div className='result-field field'>
-        <button>
-          Convert from {props.exchange.baseCurrency.label} to{' '}
-          {props.exchange.targetCurrency.label}
+        <button onClick={() => props.chartHandler?.(props.exchange)}>
+          Show Exchange Rate Chart
         </button>
         <div className='result'>
           <h3>{`${amount} ${
