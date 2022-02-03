@@ -1,7 +1,8 @@
 import { Layout } from '@components/Layout';
 import { ExchangeForm } from '@components/ExchangeForm';
 import { useEffect, useState } from 'react';
-import { ExchangeService, Currency, Exchange } from 'services/exchange';
+import { ExchangeService } from 'services/exchange';
+import { Currency, Exchange } from 'services/models';
 
 const currencies: Currency[] = [
   { value: 'USD', label: 'USD', symbol: '$' },

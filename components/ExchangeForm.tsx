@@ -1,5 +1,5 @@
 import Select from 'react-select';
-import { Currency, Exchange } from 'services/exchange';
+import { Currency, Exchange } from 'services/models';
 
 /**
  * A callback type for the amount update handler.
@@ -86,7 +86,7 @@ export function ExchangeForm(props: ExchangeFormProps): JSX.Element {
       </div>
       <div className='result-field field'>
         <button onClick={() => props.chartHandler?.(props.exchange)}>
-          Show Exchange Rate Chart
+          Show Chart
         </button>
         <div className='result'>
           <h3>{`${amount} ${
