@@ -33,10 +33,11 @@ export class ExchangeService {
   /**
    * Get the exchange rate of the passed exchange
    * @param exchange {Exchange} The exchange whose rate is being obtained.
-   * @returns {Promise<ExchangeRateRequest>} Returns a
+   * @returns {Promise<ExchangeRateRequest>} Returns an ExchangeRate object.
    */
   async getExchangeRate(exchange: Exchange): Promise<Exchange> {
-    const savedExchange = localStorage.getItem('exchange');
+    const key = this.getExchangeKey(exchange);
+    const savedExchange = localStorage.getItem(key);
     let exchangeRequest: ExchangeRateRequest | undefined;
 
     if (savedExchange === null) {
@@ -69,15 +70,25 @@ export class ExchangeService {
     };
   }
 
-  private cacheExchange(exchangeRequest: ExchangeRateRequest): void {
-    localStorage.setItem('exchange', JSON.stringify(exchangeRequest));
+  private cacheExchange(exchange: ExchangeRateRequest): void {
+    const key = this.getExchangeKey(exchange);
+    localStorage.setItem(key, JSON.stringify(exchange));
   }
 
-  private getExchangeRequestFromJSON = (raw: string): ExchangeRateRequest => {
+  private getExchangeRequestFromJSON(raw: string): ExchangeRateRequest {
     const data = JSON.parse(raw);
     return {
       ...data,
       requestTime: new Date(data.requestTime),
     };
-  };
+  }
+
+  /**
+   * Gets the local storage key of the passed exchange.
+   * @param e {Exchange} The exchange whose key is being obtained.
+   * @returns {string} Returns the key where the passed exchange is saved in local storage.
+   */
+  private getExchangeKey(e: Exchange): string {
+    return `exchange--${e.baseCurrency.value}-${e.targetCurrency.value}`;
+  }
 }
