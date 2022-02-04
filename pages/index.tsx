@@ -3,7 +3,7 @@ import { ExchangeForm } from '@components/ExchangeForm';
 import { useEffect, useState } from 'react';
 import { ExchangeService } from 'services/exchangeService';
 import { Currency, DailyRate, Exchange } from 'services/models';
-import { HistoricalRateChart } from '@components/HistoricalRateChart';
+import { RateHistoryChart } from '@components/RateHistoryChart';
 import { HistoryService } from 'services/historyService';
 import moment from 'moment';
 
@@ -66,7 +66,7 @@ export default function Home(): JSX.Element {
           onChangeTargetCurrency={targetCurrencyHandler}
           onChangeAmount={setAmount}
         />
-        <HistoricalRateChart
+        <RateHistoryChart
           exchange={exchange}
           data={exchangeHistory}
           labels={exchangeHistory.map((d) => moment(d.day).format('MMM Do YY'))}

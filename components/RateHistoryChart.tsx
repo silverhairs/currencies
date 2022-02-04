@@ -21,19 +21,6 @@ ChartJS.register(
   Legend
 );
 
-const options = {
-  responsive: true,
-  plugins: {
-    legend: {
-      position: 'top' as const,
-    },
-    title: {
-      display: true,
-      text: 'Chart.js Line Chart',
-    },
-  },
-};
-
 interface ChartProps {
   exchange: Exchange;
   data: DailyRate[];
@@ -45,8 +32,7 @@ interface ChartProps {
  * @param props {ChartProps} The chart's properties.
  * @returns {JSX.Element} Returns the chart component.
  */
-
-export function HistoricalRateChart(props: ChartProps): JSX.Element {
+export function RateHistoryChart(props: ChartProps): JSX.Element {
   return (
     <div className='historical-graph'>
       <Line
