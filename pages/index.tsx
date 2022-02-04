@@ -38,14 +38,11 @@ export default function Home(): JSX.Element {
 
   const exchangeRateHandler = async () => {
     const newExchange = await exchangeService.getExchangeRate(exchange);
-    if (newExchange !== undefined) {
-      setExchange({ ...exchange, rate: newExchange.rate });
-    }
+     setExchange({ ...exchange, rate: newExchange.rate });
   };
 
   const historyHandler = async () => {
     const history = await historyService.getHistory(exchange);
-    history.forEach(console.log);
     setExchangeHistory(history);
   };
 
