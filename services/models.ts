@@ -1,3 +1,5 @@
+import { FixedArray } from 'types';
+
 /**
  * A model for a currency.
  */
@@ -71,4 +73,13 @@ export class ExchangeRateRequest implements Exchange {
       requestTime: new Date(data.requestTime),
     });
   }
+}
+
+export interface DailyRate {
+  closingPrice: number;
+  day: Date;
+}
+
+export interface WeeklyRate {
+  days: FixedArray<DailyRate, 5>;
 }

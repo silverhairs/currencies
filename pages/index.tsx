@@ -1,8 +1,11 @@
 import { Layout } from '@components/Layout';
 import { ExchangeForm } from '@components/ExchangeForm';
 import { useEffect, useState } from 'react';
-import { ExchangeService } from 'services/exchange';
-import { Currency, Exchange } from 'services/models';
+import { ExchangeService } from 'services/exchangeService';
+import { Currency, DailyRate, Exchange } from 'services/models';
+import { HistoricalRateChart } from '@components/HistoricalRateChart';
+import { HistoryService } from 'services/historyService';
+import moment from 'moment';
 
 const currencies: Currency[] = [
   { value: 'USD', label: 'USD', symbol: '$' },
@@ -15,8 +18,9 @@ const currencies: Currency[] = [
  * @returns {JSX.Element} Returns the home page.
  */
 export default function Home(): JSX.Element {
-  const service = new ExchangeService();
-
+  const exchangeService = new ExchangeService();
+  const historyService = new HistoryService();
+  const [exchangeHistory, setExchangeHistory] = useState<DailyRate[]>([]);
   const [amount, setAmount] = useState<number>(0);
   const [exchange, setExchange] = useState<Exchange>({
     baseCurrency: currencies[0],
@@ -33,14 +37,21 @@ export default function Home(): JSX.Element {
   };
 
   const exchangeRateHandler = async () => {
-    const newExchange = await service.getExchangeRate(exchange);
+    const newExchange = await exchangeService.getExchangeRate(exchange);
     if (newExchange !== undefined) {
       setExchange({ ...exchange, rate: newExchange.rate });
     }
   };
 
+  const historyHandler = async () => {
+    const history = await historyService.fetchHistory(exchange);
+    history.forEach(console.log);
+    setExchangeHistory(history);
+  };
+
   useEffect(() => {
     exchangeRateHandler();
+    historyHandler();
   }, [exchange.baseCurrency, exchange.targetCurrency]);
 
   return (
@@ -54,6 +65,11 @@ export default function Home(): JSX.Element {
           onChangeBaseCurrency={baseCurrencyHandler}
           onChangeTargetCurrency={targetCurrencyHandler}
           onChangeAmount={setAmount}
+        />
+        <HistoricalRateChart
+          exchange={exchange}
+          data={exchangeHistory}
+          labels={exchangeHistory.map((d) => moment(d.day).format('MMM Do YY'))}
         />
       </div>
     </Layout>
