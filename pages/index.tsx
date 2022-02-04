@@ -44,7 +44,7 @@ export default function Home(): JSX.Element {
   };
 
   const historyHandler = async () => {
-    const history = await historyService.fetchHistory(exchange);
+    const history = await historyService.getHistory(exchange);
     history.forEach(console.log);
     setExchangeHistory(history);
   };

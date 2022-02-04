@@ -17,7 +17,7 @@ export class ExchangeService {
   async getExchangeRate(exchange: Exchange): Promise<Exchange> {
     const key = this.getExchangeKey(exchange);
     const savedExchange = localStorage.getItem(key);
-    let exchangeRequest: ExchangeRateRequest | undefined;
+    let exchangeRequest: ExchangeRateRequest;
 
     if (savedExchange === null) {
       exchangeRequest = await this.fetchExchange(exchange);
@@ -80,6 +80,6 @@ export class ExchangeService {
    * @returns  {string} Returns a URL.
    */
   private getFetchExchangeURL(base: string, target: string): string {
-    return `${BASE_URL}//query?function=CURRENCY_EXCHANGE_RATE&from_currency=${base}&to_currency=${target}&apikey=${API_KEY}`;
+    return `${BASE_URL}/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${base}&to_currency=${target}&apikey=${API_KEY}`;
   }
 }
